@@ -1,0 +1,16 @@
+# Token pricing used to ESTIMATE cost.
+#
+# Important nuance: this system embeds no LLM API calls — the reasoning is done
+# by the agent (Claude Code / similar) running on a paid plan with quotas. So the
+# real cost lives at the agent-session level, not inside the tools.
+#
+# We estimate cost two ways:
+#   1) tools/common/observability.py meters the tokens of data flowing through
+#      each tool (input args + output) and prices them with the rates below.
+#   2) The README documents an estimate of the agent's *reasoning* tokens per
+#      workflow run, priced with the same rates, for a per-request total.
+#
+# Set these rates to match the model/plan the agent actually runs on.
+model: "agent-underlying-model"
+input_per_1m_usd: 3.00
+output_per_1m_usd: 15.00

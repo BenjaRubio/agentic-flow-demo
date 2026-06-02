@@ -1,0 +1,17 @@
+# Core
+numpy>=1.26
+scikit-learn>=1.4          # TF-IDF fallback embedder + cosine utilities
+PyYAML>=6.0               # rules.yaml / pricing.yaml
+structlog>=24.1           # structured logging
+
+# Local semantic embeddings (preferred backend). Heavy (pulls torch).
+# If not installed, the system falls back to a TF-IDF embedder automatically.
+sentence-transformers>=2.7 ; python_version >= "3.9"
+
+# Optional: more accurate token estimation for cost logging.
+# If absent, a ~4 chars/token heuristic is used.
+tiktoken>=0.6 ; python_version >= "3.9"
+
+# Testing
+pytest>=8.0
+pytest-mock>=3.12

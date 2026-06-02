@@ -1,0 +1,10 @@
+{"text": "Customer asks where the shipment is and requests ETA update.", "label_type": "tracking_request", "label_priority": "low", "label_human_escalation": "no"}
+{"text": "Customer reports customs retention and asks for urgent assistance.", "label_type": "shipment_exception", "label_priority": "high", "label_human_escalation": "yes"}
+{"text": "Customer says invoice amount differs from quoted price for active shipment.", "label_type": "pricing_dispute", "label_priority": "medium", "label_human_escalation": "yes"}
+{"text": "Customer asks for copy of old invoice from archived shipment.", "label_type": "document_request", "label_priority": "low", "label_human_escalation": "no"}
+{"text": "Customer reports reefer container temperature deviation.", "label_type": "temperature_exception", "label_priority": "high", "label_human_escalation": "yes"}
+{"text": "Customer wants clarification on contract wording and liability.", "label_type": "legal_sensitive", "label_priority": "high", "label_human_escalation": "yes"}
+{"text": "Customer asks if cargo has already departed from origin.", "label_type": "tracking_request", "label_priority": "low", "label_human_escalation": "no"}
+{"text": "Customer says quote sent by sales differs from final operational charge.", "label_type": "pricing_dispute", "label_priority": "medium", "label_human_escalation": "yes"}
+{"text": "Customer requests update on delayed customs release for perishable goods.", "label_type": "shipment_exception", "label_priority": "high", "label_human_escalation": "yes"}
+{"text": "Customer requests packing list copy.", "label_type": "document_request", "label_priority": "low", "label_human_escalation": "no"}
