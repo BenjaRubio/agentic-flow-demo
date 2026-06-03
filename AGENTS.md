@@ -34,12 +34,16 @@ orchestration and decision-making where you excel.
 
 ## This project: Operations AI Copilot
 
-When the user asks you to do something, find the matching workflow first:
+When the user asks you to do something, first decide **who is speaking and what
+they want**, then pick the workflow. The two workflows take different inputs and
+produce different outputs — don't let customer-sounding words alone pull you into
+classification.
 
-| Task | Workflow | Tools it uses |
-|---|---|---|
-| Answer an internal documentation/policy question | `workflows/answer_docs_question.md` | `search_docs`, `get_active_policy` |
-| Classify an incoming customer request | `workflows/classify_request.md` | `classify_ticket`, `draft_response`, `escalate_case` |
+| The request is… | Signal | Workflow | Tools it uses |
+|---|---|---|---|
+| **A customer's own message**, handed to you to triage | The text *is* what the customer said/wrote; no question is aimed at you (e.g. "Customer asks for the latest ETA.") | `workflows/classify_request.md` | `classify_ticket`, `draft_response`, `escalate_case` |
+| **An internal teammate asking you for guidance/policy** | A question is aimed at *you* | `workflows/answer_docs_question.md` | `search_docs`, `get_active_policy` |
+
 
 Where reasoning is needed (resolving conflicts between *active* policies,
 drafting prose, judging a low-confidence classification), **you** are that
