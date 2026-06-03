@@ -237,6 +237,8 @@ Formato configurable: JSON por defecto, o consola legible con
 
 ## 12. Instrucciones de ejecución
 
+El repositorio tiene múltiples opciones para ejecutar desde la consola los tests, evaluaciones y las tools. Sin embargo, para probar el flujo agéntico, basta con crear el ambiente virtual, instalar las dependencias y abrir un agente en el root del repositorio, y tras leer ```AGENTS.md``` debería poder responder las consultas.
+
 Ejecutar desde la **raíz del repo**:
 
 ```bash
@@ -259,12 +261,6 @@ python -m tools.get_active_policy "pricing dispute routing"
 python -m tools.classify_ticket "Customer reports a temperature alert in reefer cargo."
 python -m tools.escalate_case operations_lead "temperature exception"
 ```
-
-**Uso agentic:** dar al agente una instrucción (p.ej. *"¿pueden las disputas de
-precio de envíos activos manejarse por el equipo comercial?"*). El agente lee
-`workflows/answer_docs_question.md`, ejecuta `search_docs`/`get_active_policy`, y
-redacta la respuesta con la cita correcta (**pricing operations**, citando
-`policy_v2` y `pricing_notes_current`, descartando v1/old).
 
 ---
 
