@@ -16,7 +16,10 @@ import sys
 
 from tools.common.embeddings import Embedder, cosine_top_k
 from tools.common.ingest import DocumentChunk, load_chunks
-from tools.common.observability import traced
+from tools.common.observability import get_logger, traced
+
+_log = get_logger("tool")
+
 
 # --------------------------------------------------------------------------- #
 # In-process index (built once per process; cheap for this tiny corpus).
@@ -57,7 +60,14 @@ def get_index() -> DocIndex:
 @traced("search_docs")
 def search_docs(query: str, k: int = 5, include_superseded: bool = False) -> list[dict]:
     """Return up to k relevant document chunks (as dicts), best first."""
+    _log.info("retrieving", query=query, k=k, include_superseded=include_superseded)
     chunks = get_index().search(query, k=k, include_superseded=include_superseded)
+    _log.info(
+        "retrieved",
+        n=len(chunks),
+        sources=[f"{c.source} ({c.status})" for c in chunks],
+        top_score=round(chunks[0].score, 4) if chunks else None,
+    )
     return [c.to_dict() for c in chunks]
 
 

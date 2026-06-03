@@ -14,6 +14,7 @@ from __future__ import annotations
 import functools
 import json
 import logging
+import os
 import sys
 import time
 from typing import Any, Callable, TypeVar
@@ -32,18 +33,27 @@ _CONFIGURED = False
 
 
 def configure_logging(level: int = logging.INFO) -> None:
-    """Idempotently configure structlog to emit JSON lines to stderr."""
+    """Idempotently configure structlog.
+
+    Logs go to **stderr** (Unix convention: stdout = program data, stderr =
+    diagnostics) so tool output on stdout stays clean/parseable. Format is JSON
+    by default, or a human-readable console renderer when
+    COPILOT_LOG_FORMAT=console.
+    """
     global _CONFIGURED
     if _CONFIGURED:
         return
+    if os.getenv("COPILOT_LOG_FORMAT", "json").lower() == "console":
+        renderer = structlog.dev.ConsoleRenderer()
+    else:
+        renderer = structlog.processors.JSONRenderer()
     structlog.configure(
         processors=[
             structlog.processors.add_log_level,
             structlog.processors.TimeStamper(fmt="iso"),
-            structlog.processors.JSONRenderer(),
+            renderer,
         ],
         wrapper_class=structlog.make_filtering_bound_logger(level),
-        # Trace logs go to stderr so tool output on stdout stays clean/parseable.
         logger_factory=structlog.PrintLoggerFactory(file=sys.stderr),
         cache_logger_on_first_use=True,
     )

@@ -16,17 +16,21 @@ import json
 
 from tools.common.decision_table import decide
 from tools.common.paths import TRAIN_TICKETS
+from tools.common.prototypes import TypePrototypeClassifier
 from tools.classify_ticket import TicketTypeKNN, _load_train
 
+CLASSIFIERS = {"knn": TicketTypeKNN, "prototype": TypePrototypeClassifier}
 
-def loocv_type_accuracy(texts: list[str], labels: list[str], k: int = 3) -> dict:
+
+def loocv_type_accuracy(texts: list[str], labels: list[str], classifier=TicketTypeKNN) -> dict:
+    """Leave-One-Out CV for a given instance-based classifier class."""
     correct = 0
     mistakes = []
     for i in range(len(texts)):
         train_texts = texts[:i] + texts[i + 1 :]
         train_labels = labels[:i] + labels[i + 1 :]
-        knn = TicketTypeKNN(train_texts, train_labels)
-        pred = knn.predict(texts[i], k=k)["type"]
+        clf = classifier(train_texts, train_labels)
+        pred = clf.predict(texts[i])["type"]
         if pred == labels[i]:
             correct += 1
         else:
@@ -36,7 +40,7 @@ def loocv_type_accuracy(texts: list[str], labels: list[str], k: int = 3) -> dict
         "correct": correct,
         "accuracy": round(correct / len(texts), 4),
         "mistakes": mistakes,
-        "backend": TicketTypeKNN(texts, labels).backend,
+        "backend": classifier(texts, labels).backend,
     }
 
 
@@ -67,17 +71,20 @@ def decision_table_fidelity() -> dict:
 
 def main() -> None:
     texts, labels = _load_train()
-    type_report = loocv_type_accuracy(texts, labels)
-    rules_report = decision_table_fidelity()
 
     print("=" * 60)
-    print("TYPE classifier — LOOCV")
-    print(f"  backend : {type_report['backend']}")
-    print(f"  accuracy: {type_report['accuracy']}  ({type_report['correct']}/{type_report['n']})")
-    if type_report["mistakes"]:
-        print("  mistakes:")
-        for m in type_report["mistakes"]:
-            print(f"    - gold={m['gold']:<22} pred={m['pred']:<22} | {m['text']}")
+    print("TYPE classifier — LOOCV (comparison)")
+    reports = {}
+    for name, cls in CLASSIFIERS.items():
+        rep = loocv_type_accuracy(texts, labels, classifier=cls)
+        reports[name] = rep
+        print(f"  {name:<10} [{rep['backend']}]: accuracy={rep['accuracy']} ({rep['correct']}/{rep['n']})")
+    best = max(reports, key=lambda n: reports[n]["accuracy"])
+    print(f"  -> best: {best}")
+    for m in reports[best]["mistakes"]:
+        print(f"     mistake ({best}): gold={m['gold']:<20} pred={m['pred']:<20} | {m['text']}")
+
+    rules_report = decision_table_fidelity()
     print("=" * 60)
     print("Decision table — fidelity to gold labels (given gold type)")
     print(f"  priority accuracy   : {rules_report['priority_accuracy']}")

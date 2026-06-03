@@ -26,10 +26,21 @@ def test_customs_trigger_escalates():
     assert d.human_escalation is True
 
 
-def test_service_continuity_bumps_priority_without_forcing_escalation():
-    # "supermarket slot tomorrow" => service-continuity => at least Medium,
-    # but does not by itself force human escalation.
+def test_service_continuity_is_semantic_not_keyword():
+    # service_continuity is now detected semantically (upstream), so a bare
+    # keyword no longer fires it inside decide().
     d = decide("Customer may lose a supermarket slot tomorrow.", "tracking_request")
+    assert "service_continuity" not in d.fired_triggers
+
+
+def test_service_continuity_via_extra_triggers_bumps_priority():
+    # When the semantic matcher fires it upstream, it is passed via extra_triggers
+    # => at least Medium, but it does not by itself force human escalation.
+    d = decide(
+        "Customer may lose a sales window.",
+        "tracking_request",
+        extra_triggers=("service_continuity",),
+    )
     assert d.priority == "medium"
     assert d.human_escalation is False
     assert d.next_action == "auto_respond"

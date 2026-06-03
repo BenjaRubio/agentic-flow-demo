@@ -62,13 +62,21 @@ routing_targets:
 # Priority order (used for min_priority bumps).
 priority_order: [low, medium, high]
 
-# Feature triggers detected in the ticket text (keyword/substring match).
-# They can force escalation and/or raise a minimum priority, regardless of the
-# predicted type. This captures cases the type alone may miss (e.g. a delay that
-# mentions financial loss). Triggers never LOWER an existing decision.
+# Feature triggers that can RAISE priority and/or FORCE escalation, regardless of
+# the predicted type. Triggers never LOWER an existing decision.
+#
+# detection:
+#   keyword  (default) -> matched by substring against the ticket text. Used for
+#                         mandatory, unambiguous compliance terms taken straight
+#                         from the policy docs (must be guaranteed, not a threshold).
+#   semantic           -> matched by cosine similarity against `archetypes` (a
+#                         ConceptMatcher). Used for genuinely fuzzy concepts so we
+#                         generalize beyond memorized phrases. NOT matched by
+#                         keyword; the classification pipeline injects it.
 triggers:
   # escalation_policy.md: escalate immediately for these.
   customs_retention:
+    detection: keyword
     keywords: ["customs"]
     min_priority: high
     force_escalation: true
@@ -76,28 +84,41 @@ triggers:
   # policy_v2_shipping.md: any urgent request involving delay must be escalated
   # for human review. We err toward escalation for delays (safety-first).
   delay:
+    detection: keyword
     keywords: ["delay", "delayed"]
     min_priority: high
     force_escalation: true
     route: operations_lead
   temperature:
+    detection: keyword
     keywords: ["reefer", "temperature", "refrigerated", "cold chain", "perishable"]
     min_priority: high
     force_escalation: true
     route: operations_lead
   legal:
+    detection: keyword
     keywords: ["liability", "contract", "contractual", "legal", "clause", "agreement"]
     min_priority: high
     force_escalation: true
     route: compliance
   regulated_cargo:
+    detection: keyword
     keywords: ["regulated", "hazardous", "dangerous goods", "restricted"]
     min_priority: high
     force_escalation: true
     route: compliance
-  # pricing_notes_current.md: issues affecting customer expectation / service
-  # continuity => at least Medium priority.
+  # pricing_notes_current.md: "If the issue affects customer expectation or
+  # service continuity, mark at least Medium priority." Detected semantically so
+  # paraphrases ("may lose a supermarket slot", "will miss the retail window")
+  # match without memorizing any single phrase. Archetypes are grounded in the
+  # policy language, NOT in the test set; the threshold is a general default and
+  # is deliberately NOT tuned on the test tickets.
   service_continuity:
-    keywords: ["lose", "loss", "missed", "supermarket slot", "shelf", "penalty", "deadline", "tomorrow"]
+    detection: semantic
+    semantic_threshold: 0.40
+    archetypes:
+      - "the issue affects the customer's service continuity"
+      - "the customer may miss a deadline or delivery window"
+      - "the problem causes a financial penalty or a lost sale for the customer"
     min_priority: medium
     force_escalation: false

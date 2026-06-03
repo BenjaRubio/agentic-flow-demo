@@ -2,7 +2,12 @@
 
 Reads config/rules.yaml (authored from the source docs) and applies:
   1. a base mapping from ticket type, then
-  2. keyword triggers that can RAISE priority and/or FORCE escalation.
+  2. triggers that can RAISE priority and/or FORCE escalation.
+
+Triggers are detected two ways (see rules.yaml):
+  - keyword triggers are matched here, against the ticket text.
+  - semantic triggers are detected upstream (ConceptMatcher) and passed in via
+    `extra_triggers`; they are NOT keyword-matched here.
 
 Triggers never lower an existing decision. No LLM is involved.
 """
@@ -45,12 +50,31 @@ def routing_targets() -> dict:
     return load_rules().get("routing_targets", {})
 
 
+def semantic_triggers(rules: dict | None = None) -> dict:
+    """Return {name: trigger_cfg} for triggers detected semantically (archetypes)."""
+    rules = rules or load_rules()
+    return {
+        name: cfg
+        for name, cfg in rules.get("triggers", {}).items()
+        if cfg.get("detection") == "semantic"
+    }
+
+
 def _max_priority(a: str, b: str, order: list[str]) -> str:
     return a if order.index(a) >= order.index(b) else b
 
 
-def decide(text: str, ticket_type: str, rules: dict | None = None) -> Decision:
-    """Apply the decision table to a ticket given its predicted type."""
+def decide(
+    text: str,
+    ticket_type: str,
+    rules: dict | None = None,
+    extra_triggers: tuple[str, ...] = (),
+) -> Decision:
+    """Apply the decision table to a ticket given its predicted type.
+
+    `extra_triggers` are trigger names already detected upstream (e.g. semantic
+    matches) that should be applied in addition to the keyword triggers.
+    """
     rules = rules or load_rules()
     order: list[str] = rules["priority_order"]
 
@@ -62,9 +86,15 @@ def decide(text: str, ticket_type: str, rules: dict | None = None) -> Decision:
     lowered = text.lower()
     fired: list[str] = []
     route_override: str | None = None
+    extra = set(extra_triggers)
 
     for name, trig in rules.get("triggers", {}).items():
-        if any(kw.lower() in lowered for kw in trig.get("keywords", [])):
+        is_semantic = trig.get("detection") == "semantic"
+        if is_semantic:
+            matched = name in extra
+        else:
+            matched = any(kw.lower() in lowered for kw in trig.get("keywords", []))
+        if matched:
             fired.append(name)
             if "min_priority" in trig:
                 priority = _max_priority(priority, trig["min_priority"], order)

@@ -1,4 +1,3 @@
-"""Make the `src/` root importable so `import tools...` works under pytest."""
 import sys
 from pathlib import Path
 

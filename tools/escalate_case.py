@@ -15,10 +15,11 @@ import uuid
 from datetime import datetime, timezone
 
 from tools.common.decision_table import routing_targets
-from tools.common.observability import traced
+from tools.common.observability import get_logger, traced
 from tools.common.paths import ensure_tmp
 
 _LOG_FILE = "escalations.log"
+_log = get_logger("tool")
 
 
 @traced("escalate_case")
@@ -39,6 +40,12 @@ def escalate_case(team: str, reason: str) -> dict:
     with log_path.open("a", encoding="utf-8") as fh:
         fh.write(json.dumps(receipt, ensure_ascii=False) + "\n")
 
+    _log.info(
+        "escalation_registered",
+        escalation_id=receipt["escalation_id"],
+        team=receipt["team_label"],
+        status=receipt["status"],
+    )
     return receipt
 
 

@@ -14,8 +14,10 @@ from __future__ import annotations
 import sys
 from datetime import date
 
-from tools.common.observability import traced
+from tools.common.observability import get_logger, traced
 from tools.search_docs import get_index
+
+_log = get_logger("tool")
 
 
 def _sort_key(chunk) -> tuple:
@@ -37,6 +39,7 @@ def get_active_policy(topic: str, k: int = 6) -> dict:
           "winner": chunk dict | None,   # single best active statement
         }
     """
+    _log.info("resolving_policy", topic=topic)
     index = get_index()
     # Pull a wide candidate set including superseded, so we can report them.
     all_candidates = index.search(topic, k=k, include_superseded=True)
@@ -46,12 +49,20 @@ def get_active_policy(topic: str, k: int = 6) -> dict:
 
     active.sort(key=_sort_key, reverse=True)
 
+    winner = active[0] if active else None
+    _log.info(
+        "policy_resolved",
+        found=bool(active),
+        winner=f"{winner.source} ({winner.status}, {winner.effective_date})" if winner else None,
+        n_superseded=len(superseded),
+        superseded=[c.source for c in superseded],
+    )
     return {
         "topic": topic,
         "found": bool(active),
         "active_statements": [c.to_dict() for c in active],
         "superseded": [c.to_dict() for c in superseded],
-        "winner": active[0].to_dict() if active else None,
+        "winner": winner.to_dict() if winner else None,
     }
 
 
