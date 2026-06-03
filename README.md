@@ -230,7 +230,7 @@ Formato configurable: JSON por defecto, o consola legible con
 - Reemplazar triggers por keyword con un extractor de features semántico
   (similitud a frases canónicas) manteniéndolo determinístico.
 - Persistir los vectores del corpus en disco para arranque en frío más rápido.
-- Un *router* ligero que detecte si la entrada es pregunta documental o ticket.
+- Un *router* ligero que detecte si la entrada es pregunta documental o ticket. O bien, que el agente, cuando no tenga la confianza suficiente para determinar que workflow ejecutar, pregunte al usuario, permitiendo refinar su solcitud y ejecutar así el workflow correcto.
 - Tests de integración que ejerciten el workflow completo con un agente simulado.
 
 ---
